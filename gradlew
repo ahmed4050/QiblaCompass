@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Gradle start up script for UN*X
 #
@@ -14,6 +14,11 @@ DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
 
 APP_NAME="Gradle"
 APP_BASE_NAME=`basename "$0"`
+if [[ "$0" == */* ]]; then
+    APP_HOME="$(cd "${0%/*}" >/dev/null 2>&1 && pwd -P)"
+else
+    APP_HOME="$(pwd -P)"
+fi
 
 # Use the maximum available, or set MAX_FD != -1 to use that value.
 MAX_FD="maximum"
