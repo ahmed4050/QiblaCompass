@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kapt)
 }
 
 android {
@@ -61,6 +62,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
 
+    // Material XML theme
+    implementation(libs.material)
+
     // Compose
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -77,7 +81,7 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
@@ -85,9 +89,6 @@ dependencies {
     // Network
     implementation(libs.okhttp)
     implementation(libs.gson)
-
-    // Sensors
-    implementation("androidx.sensors:sensors:1.0.0-alpha02")
 
     // Testing
     testImplementation(libs.junit)

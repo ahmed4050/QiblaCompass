@@ -9,7 +9,7 @@ interface QiblaRepository {
     /**
      * الحصول على تدفق حالة القبلة
      */
-    fun getQiblaFlow(): Flow<QiblaState>
+    val qiblaFlow: Flow<QiblaState>
 
     /**
      * طلب تحديث الموقع يدوياً
@@ -44,5 +44,5 @@ interface QiblaRepository {
     /**
      * الحصول على تدفق اتجاه الجهاز (azimuth)
      */
-    fun getDeviceAzimuthFlow(): Flow<Float>
+    val deviceAzimuthFlow: Flow<Float>
 }

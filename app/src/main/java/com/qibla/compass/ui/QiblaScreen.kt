@@ -1,32 +1,63 @@
 package com.qibla.compass.ui
 
 import androidx.compose.animation.animateFloatAsState
-import androidx.compose.animation.animateFloat
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.BorderStroke
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.qibla.compass.R
 import com.qibla.compass.ui.theme.QiblaCompassTheme
 import com.qibla.compass.ui.theme.QiblaShapes
-import com.qibla.compass.ui.theme.QiblaTypography
-import kotlinx.coroutines.launch
+import kotlin.math.cos
+import kotlin.math.sin
 
 @Composable
 fun QiblaScreen(
@@ -37,48 +68,31 @@ fun QiblaScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            // الخلفية
-            BackgroundLayer()
-
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // معلومات الموقع والقبلة
                 LocationInfoCard(viewModel)
 
-                Spacer(Modifier.padding(32.dp))
+                Spacer(Modifier.padding(24.dp))
 
-                // البوصلة الرئيسية
                 CompassView(viewModel)
 
-                Spacer(Modifier.padding(32.dp))
+                Spacer(Modifier.padding(24.dp))
 
-                // أزرار التحكم
                 ControlButtons(viewModel)
             }
 
-            // مؤشر التحميل
             if (viewModel.isLoading) {
                 LoadingOverlay()
             }
 
-            // رسائل الخطأ
             if (viewModel.hasError) {
                 ErrorSnackbar(viewModel)
             }
         }
     }
-}
-
-@Composable
-private fun BackgroundLayer() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    )
 }
 
 @Composable
@@ -100,14 +114,13 @@ private fun LocationInfoCard(viewModel: QiblaViewModel) {
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // اتجاه القبلة
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    painter = painterResource("ic_qibla_direction.xml"),
-                    contentDescription = "اتجاه القبلة",
+                    painter = painterResource(R.drawable.ic_qibla_direction),
+                    contentDescription = stringResource(R.string.qibla_direction),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
                 )
@@ -133,7 +146,7 @@ private fun LocationInfoCard(viewModel: QiblaViewModel) {
             Spacer(Modifier.height(4.dp))
 
             Text(
-                text = "${viewModel.qiblaDirection:.1f}°",
+                text = "${viewModel.qiblaDirection}°",
                 style = MaterialTheme.typography.titleLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -145,20 +158,19 @@ private fun LocationInfoCard(viewModel: QiblaViewModel) {
                 color = MaterialTheme.colorScheme.outlineVariant
             )
 
-            // المسافة والموقع
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 InfoItem(
-                    icon = "ic_location.xml",
+                    icon = R.drawable.ic_location,
                     label = stringResource(R.string.distance_to_kaaba),
-                    value = "${viewModel.distanceToKaaba:.0f} كم",
+                    value = "${viewModel.distanceToKaaba} كم",
                     color = MaterialTheme.colorScheme.tertiary
                 )
 
                 InfoItem(
-                    icon = "ic_accuracy.xml",
+                    icon = R.drawable.ic_accuracy,
                     label = stringResource(R.string.accuracy),
                     value = accuracy?.name ?: "---",
                     color = when (accuracy) {
@@ -184,7 +196,7 @@ private fun LocationInfoCard(viewModel: QiblaViewModel) {
 
 @Composable
 private fun InfoItem(
-    icon: String,
+    icon: Int,
     label: String,
     value: String,
     color: Color
@@ -220,31 +232,40 @@ fun CompassView(viewModel: QiblaViewModel) {
     val relativeAngle = viewModel.relativeQiblaAngle
     val deviceAzimuth = viewModel.deviceAzimuth
 
-    // أنيميشن سلسة للسهم
     val animatedAngle by animateFloatAsState(
         targetValue = relativeAngle,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "qiblaAngle"
     )
+
+    val textMeasurer = rememberTextMeasurer()
 
     Box(
         modifier = Modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-        // دائرة البوصلة الخارجية
         Canvas(modifier = Modifier.size(size)) {
             drawCompassCircle(
-                size = Size(size.toPx(), size.toPx()),
-                deviceAzimuth = deviceAzimuth
+                size = size.toPx().let { Size(it, it) },
+                deviceAzimuth = deviceAzimuth,
+                circleColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                tickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
+                cardinalColor = MaterialTheme.colorScheme.primary,
+                textMeasurer = textMeasurer
             )
         }
 
-        // سهم القبلة الدوار
         QiblaArrow(
             angle = animatedAngle,
-            size = size
+            size = size,
+            arrowColor = MaterialTheme.colorScheme.primary,
+            tipColor = MaterialTheme.colorScheme.primaryContainer
         )
 
-        // نقطة المركز
         CircleIndicator()
     }
 }
@@ -252,63 +273,59 @@ fun CompassView(viewModel: QiblaViewModel) {
 @Composable
 fun QiblaArrow(
     angle: Float,
-    size: Dp
+    size: Dp,
+    arrowColor: Color,
+    tipColor: Color
 ) {
-    val arrowSize = (size.toPx() * 0.85)
-    val arrowHeight = arrowSize * 0.9
+    val arrowSize = size.toPx() * 0.85f
+    val arrowHeight = arrowSize * 0.9f
 
     Box(
         modifier = Modifier
             .size(size)
-            .rotate(angle)
             .graphicsLayer {
-                transformOrigin = androidx.compose.ui.graphicsLayer.TransformOrigin(
-                    androidx.compose.ui.geometry.Offset(size.toPx() / 2, size.toPx() / 2)
-                )
+                rotationZ = angle
+                transformOrigin = TransformOrigin(0.5f, 0.5f)
             }
     ) {
         Canvas(modifier = Modifier.size(size)) {
-            val centerX = size.toPx() / 2
-            val centerY = size.toPx() / 2
-            val halfWidth = arrowSize / 6
+            val centerX = size.toPx() / 2f
+            val centerY = size.toPx() / 2f
+            val halfWidth = arrowSize / 6f
 
-            val path = Path().apply {
-                moveTo(centerX, centerY - arrowHeight / 2)
-                lineTo(centerX - halfWidth, centerY + arrowHeight / 4)
-                lineTo(centerX + halfWidth, centerY + arrowHeight / 4)
+            val path = android.graphics.Path().apply {
+                moveTo(centerX, centerY - arrowHeight / 2f)
+                lineTo(centerX - halfWidth, centerY + arrowHeight / 4f)
+                lineTo(centerX + halfWidth, centerY + arrowHeight / 4f)
                 close()
             }
 
             drawPath(
                 path = path,
-                color = MaterialTheme.colorScheme.primary,
-                style = Fill
+                color = arrowColor
             )
 
-            // رأس السهم (مثلث)
-            val tipPath = Path().apply {
-                moveTo(centerX, centerY - arrowHeight / 2)
-                lineTo(centerX - halfWidth * 1.5f, centerY - arrowHeight / 2 + halfWidth * 2)
-                lineTo(centerX + halfWidth * 1.5f, centerY - arrowHeight / 2 + halfWidth * 2)
+            val tipPath = android.graphics.Path().apply {
+                moveTo(centerX, centerY - arrowHeight / 2f)
+                lineTo(centerX - halfWidth * 1.5f, centerY - arrowHeight / 2f + halfWidth * 2f)
+                lineTo(centerX + halfWidth * 1.5f, centerY - arrowHeight / 2f + halfWidth * 2f)
                 close()
             }
 
             drawPath(
                 path = tipPath,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                style = Fill
+                color = tipColor
             )
         }
 
-        // نص "قبلة" على السهم
         Text(
-            text = "الكعبة",
+            text = stringResource(R.string.app_name),
             style = MaterialTheme.typography.labelLarge.copy(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimary
             ),
             modifier = Modifier
-                .padding(top = (size.toPx() * 0.15).dp)
+                .padding(top = (size.toPx() * 0.15f).dp)
                 .align(Alignment.CenterHorizontally)
         )
     }
@@ -320,7 +337,6 @@ fun CircleIndicator() {
         modifier = Modifier
             .size(24.dp)
             .background(MaterialTheme.colorScheme.primary, CircleShape)
-            .align(Alignment.Center)
     ) {
         Box(
             modifier = Modifier
@@ -331,98 +347,93 @@ fun CircleIndicator() {
     }
 }
 
-private fun Canvas.drawCompassCircle(size: Size, deviceAzimuth: Float) {
-    val center = Offset(size.width / 2, size.height / 2)
-    val radius = size.width / 2 - 20
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCompassCircle(
+    size: Size,
+    deviceAzimuth: Float,
+    circleColor: Color,
+    tickColor: Color,
+    textColor: Color,
+    cardinalColor: Color,
+    textMeasurer: androidx.compose.ui.text.TextMeasurer
+) {
+    val center = Offset(size.width / 2f, size.height / 2f)
+    val radius = size.width / 2f - 20f
 
-    // دائرة خلفية
     drawCircle(
-        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        color = circleColor,
         center = center,
-        radius = radius + 20,
+        radius = radius + 20f,
         style = Stroke(width = 40.dp.toPx())
     )
 
-    // علامات الدرجات
-    val degreePaint = Paint().apply {
-        color = MaterialTheme.colorScheme.onSurface.toArgb()
-        strokeWidth = 1.dp.toPx()
-        isAntiAlias = true
-        textSize = 12.dp.toPx()
-        typeface = androidx.compose.ui.text.font.Typeface.DEFAULT_BOLD
-    }
-
-    for (i in 0..35 step 15) {
-        val angle = Math.toRadians((i - deviceAzimuth + 360) % 360 - 90)
-        val innerRadius = radius - 15
+    // علامات الدرجات (كل 15 درجة)
+    for (i in 0..35) {
+        val angle = Math.toRadians((i * 15 - deviceAzimuth + 360) % 360 - 90)
+        val innerRadius = radius - 15f
         val outerRadius = radius
 
-        val startX = center.x + innerRadius * cos(angle)
-        val startY = center.y + innerRadius * sin(angle)
-        val endX = center.x + outerRadius * cos(angle)
-        val endY = center.y + outerRadius * sin(angle)
-
-        drawLine(
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-            start = Offset(startX, startY),
-            end = Offset(endX, endY),
-            strokeWidth = 1.5.dp.toPx()
+        val start = Offset(
+            center.x + innerRadius * cos(angle).toFloat(),
+            center.y + innerRadius * sin(angle).toFloat()
+        )
+        val end = Offset(
+            center.x + outerRadius * cos(angle).toFloat(),
+            center.y + outerRadius * sin(angle).toFloat()
         )
 
-        // نص الدرجة
-        if (i % 45 == 0) {
-            val textRadius = radius - 30
-            val textX = center.x + textRadius * cos(angle)
-            val textY = center.y + textRadius * sin(angle)
-
-            val label = when (i) {
-                0 -> "ش"
-                90 -> "ش"
-                180 -> "ج"
-                270 -> "غ"
-                else -> i.toString()
-            }
-
-            drawText(
-                text = label,
-                x = textX - degreePaint.measureText(label) / 2,
-                y = textY + degreePaint.textSize / 3,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                style = degreePaint
-            )
-        }
+        drawLine(
+            color = tickColor,
+            start = start,
+            end = end,
+            strokeWidth = if (i % 3 == 0) 1.5.dp.toPx() else 1.dp.toPx()
+        )
     }
 
-    // علامات الاتجاهات الرئيسية
-    val cardinalPaint = Paint().apply {
-        color = MaterialTheme.colorScheme.primary.toArgb()
-        strokeWidth = 2.dp.toPx()
-        isAntiAlias = true
-        textSize = 16.dp.toPx()
-        typeface = androidx.compose.ui.text.font.Typeface.DEFAULT_BOLD
-    }
-
+    // الاتجاهات الرئيسية مع النصوص
     val directions = listOf(
-        0f to "شمال",
-        90f to "شرق",
-        180f to "جنوب",
-        270f to "غرب"
+        0 to "شمال",
+        90 to "شرق",
+        180 to "جنوب",
+        270 to "غرب"
     )
 
     directions.forEach { (deg, label) ->
         val angle = Math.toRadians((deg - deviceAzimuth + 360) % 360 - 90)
-        val textRadius = radius - 50
-        val textX = center.x + textRadius * cos(angle)
-        val textY = center.y + textRadius * sin(angle)
+        val textRadius = radius - 40f
+        val textX = center.x + textRadius * cos(angle).toFloat()
+        val textY = center.y + textRadius * sin(angle).toFloat()
+
+        val style = TextStyle(
+            color = cardinalColor,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold
+        )
+        val layout = textMeasurer.measure(label, style)
 
         drawText(
-            text = label,
-            x = textX - cardinalPaint.measureText(label) / 2,
-            y = textY + cardinalPaint.textSize / 3,
-            color = MaterialTheme.colorScheme.primary,
-            style = cardinalPaint
+            textLayoutResult = layout,
+            topLeft = Offset(
+                textX - layout.size.width / 2f,
+                textY - layout.size.height / 2f
+            )
         )
     }
+
+    // إحداثيات الكعبة في المركز
+    val kaabaText = "الكعبة"
+    val kaabaStyle = TextStyle(
+        color = textColor,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium
+    )
+    val kaabaLayout = textMeasurer.measure(kaabaText, kaabaStyle)
+    drawText(
+        textLayoutResult = kaabaLayout,
+        topLeft = Offset(
+            center.x - kaabaLayout.size.width / 2f,
+            center.y - kaabaLayout.size.height / 2f - radius / 2f
+        )
+    )
 }
 
 @Composable
@@ -431,7 +442,6 @@ fun ControlButtons(viewModel: QiblaViewModel) {
         modifier = Modifier.padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // زر إعادة التحديد
         OutlinedButton(
             onClick = { viewModel.refreshLocation() },
             modifier = Modifier
@@ -449,7 +459,7 @@ fun ControlButtons(viewModel: QiblaViewModel) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    painter = painterResource("ic_refresh.xml"),
+                    painter = painterResource(R.drawable.ic_refresh),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
@@ -462,7 +472,6 @@ fun ControlButtons(viewModel: QiblaViewModel) {
             }
         }
 
-        // زر المعايرة
         OutlinedButton(
             onClick = { viewModel.onCalibrationComplete() },
             modifier = Modifier
@@ -480,7 +489,7 @@ fun ControlButtons(viewModel: QiblaViewModel) {
                 horizontalArrangement = Arrangement.Center
             ) {
                 Icon(
-                    painter = painterResource("ic_calibration.xml"),
+                    painter = painterResource(R.drawable.ic_calibration),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.size(20.dp)
@@ -522,10 +531,7 @@ fun LoadingOverlay() {
 
 @Composable
 fun ErrorSnackbar(viewModel: QiblaViewModel) {
-    val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    SnackbarHost(hostState = snackbarHostState)
 
     LaunchedEffect(viewModel.errorMessage) {
         viewModel.errorMessage?.let { message ->
@@ -538,6 +544,13 @@ fun ErrorSnackbar(viewModel: QiblaViewModel) {
             }
         }
     }
+
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 90.dp)
+    )
 }
 
 @Composable

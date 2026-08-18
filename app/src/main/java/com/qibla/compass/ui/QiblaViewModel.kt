@@ -39,7 +39,7 @@ class QiblaViewModel @Inject constructor(
 
     private fun observeQibla() {
         viewModelScope.launch {
-            repository.getQiblaFlow().collect { state ->
+            repository.qiblaFlow.collect { state ->
                 qiblaState = state
             }
         }
@@ -47,7 +47,7 @@ class QiblaViewModel @Inject constructor(
 
     private fun observeDeviceAzimuth() {
         viewModelScope.launch {
-            repository.getDeviceAzimuthFlow().collect { azimuth ->
+            repository.deviceAzimuthFlow.collect { azimuth ->
                 deviceAzimuth = azimuth
             }
         }

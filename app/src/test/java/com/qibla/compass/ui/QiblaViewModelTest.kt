@@ -12,7 +12,7 @@ import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
@@ -37,21 +37,21 @@ class QiblaViewModelTest {
         qiblaStateFlow = MutableStateFlow(QiblaState.Loading)
         azimuthFlow = MutableStateFlow(0f)
 
-        coEvery { mockRepository.getQiblaFlow() } returns qiblaStateFlow.asStateFlow()
-        coEvery { mockRepository.getDeviceAzimuthFlow() } returns azimuthFlow.asStateFlow()
+        coEvery { mockRepository.qiblaFlow } returns qiblaStateFlow.asStateFlow()
+        coEvery { mockRepository.deviceAzimuthFlow } returns azimuthFlow.asStateFlow()
         coEvery { mockRepository.hasLocationPermission() } returns true
 
         viewModel = QiblaViewModel(mockRepository)
     }
 
     @Test
-    fun `initial state should be loading`() = runBlockingTest {
+    fun `initial state should be loading`() = runTest {
         assertEquals(QiblaState.Loading, viewModel.qiblaState)
         assertEquals(0f, viewModel.deviceAzimuth, 0.001f)
     }
 
     @Test
-    fun `should update qiblaDirection when repository emits success`() = runBlockingTest {
+    fun `should update qiblaDirection when repository emits success`() = runTest {
         val location = LocationData(
             latitude = 24.7136,
             longitude = 46.6753,
@@ -76,14 +76,14 @@ class QiblaViewModelTest {
     }
 
     @Test
-    fun `should update deviceAzimuth when repository emits azimuth`() = runBlockingTest {
+    fun `should update deviceAzimuth when repository emits azimuth`() = runTest {
         azimuthFlow.value = 90f
 
         assertEquals(90f, viewModel.deviceAzimuth, 0.001f)
     }
 
     @Test
-    fun `should calculate relativeQiblaAngle correctly`() = runBlockingTest {
+    fun `should calculate relativeQiblaAngle correctly`() = runTest {
         val location = LocationData(0.0, 0.0, 10f, 0, "gps")
         val result = QiblaResult(direction = 180.0, distanceKm = 100.0, userLocation = location)
 
@@ -96,7 +96,7 @@ class QiblaViewModelTest {
     }
 
     @Test
-    fun `should handle wrap around for relative angle`() = runBlockingTest {
+    fun `should handle wrap around for relative angle`() = runTest {
         val location = LocationData(0.0, 0.0, 10f, 0, "gps")
         val result = QiblaResult(direction = 10.0, distanceKm = 100.0, userLocation = location)
 
@@ -109,33 +109,33 @@ class QiblaViewModelTest {
     }
 
     @Test
-    fun `should call repository.requestLocationUpdate on refreshLocation`() = runBlockingTest {
+    fun `should call repository.requestLocationUpdate on refreshLocation`() = runTest {
         viewModel.refreshLocation()
 
         verify { mockRepository.requestLocationUpdate() }
     }
 
     @Test
-    fun `should call repository.startCompassUpdates on init`() = runBlockingTest {
+    fun `should call repository.startCompassUpdates on init`() = runTest {
         verify { mockRepository.startCompassUpdates() }
     }
 
     @Test
-    fun `should call repository.stopCompassUpdates on cleared`() = runBlockingTest {
+    fun `should call repository.stopCompassUpdates on cleared`() = runTest {
         viewModel.onCleared()
 
         verify { mockRepository.stopCompassUpdates() }
     }
 
     @Test
-    fun `should set isCompassCalibrated to true on calibration`() = runBlockingTest {
+    fun `should set isCompassCalibrated to true on calibration`() = runTest {
         viewModel.onCalibrationComplete()
 
         assertTrue(viewModel.isCompassCalibrated)
     }
 
     @Test
-    fun `should show error state when repository emits error`() = runBlockingTest {
+    fun `should show error state when repository emits error`() = runTest {
         qiblaStateFlow.value = QiblaState.Error("Location unavailable", null)
 
         assertTrue(viewModel.hasError)
@@ -143,21 +143,21 @@ class QiblaViewModelTest {
     }
 
     @Test
-    fun `should show permission denied state`() = runBlockingTest {
+    fun `should show permission denied state`() = runTest {
         qiblaStateFlow.value = QiblaState.PermissionDenied
 
         assertTrue(viewModel.isPermissionDenied)
     }
 
     @Test
-    fun `should show location unavailable state`() = runBlockingTest {
+    fun `should show location unavailable state`() = runTest {
         qiblaStateFlow.value = QiblaState.LocationUnavailable
 
         assertTrue(viewModel.isLocationUnavailable)
     }
 
     @Test
-    fun `isLoading should be true only for Loading state`() = runBlockingTest {
+    fun `isLoading should be true only for Loading state`() = runTest {
         assertTrue(viewModel.isLoading)
 
         qiblaStateFlow.value = QiblaState.Error("error", null)
@@ -168,3 +168,4 @@ class QiblaViewModelTest {
         assertFalse(viewModel.isLoading)
     }
 }
+

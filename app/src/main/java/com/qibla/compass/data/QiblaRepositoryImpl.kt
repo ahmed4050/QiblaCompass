@@ -14,6 +14,7 @@ import com.qibla.compass.data.QiblaState
 import com.qibla.compass.domain.QiblaRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.receiveAsFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -40,10 +41,10 @@ class QiblaRepositoryImpl @Inject constructor(
     private var lastAzimuth: Float = 0f
     private var isCompassActive = false
 
-    override val getQiblaFlow = _qiblaState
+    override val qiblaFlow = _qiblaState
         .asStateFlow()
 
-    override val getDeviceAzimuthFlow = azimuthChannel
+    override val deviceAzimuthFlow = azimuthChannel
         .receiveAsFlow()
         .stateIn(scope, sharingStarted.WhileSubscribed(), 0f)
 
