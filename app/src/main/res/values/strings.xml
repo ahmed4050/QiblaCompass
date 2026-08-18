@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">بوصلة القبلة</string>
+    <string name="qibla_direction">اتجاه القبلة</string>
+    <string name="distance_to_kaaba">المسافة للكعبة</string>
+    <string name="accuracy">الدقة</string>
+    <string name="coordinates_format">الإحداثيات: %.6f°, %.6f°</string>
+    <string name="refresh_location">تحديث الموقع</string>
+    <string name="calibrate_compass">معايرة البوصلة</string>
+    <string name="determining_location">جاري تحديد الموقع…</string>
+    <string name="retry">إعادة المحاولة</string>
+    <string name="permission_location_rationale">يحتاج التطبيق للوصول لموقعك لتحديد اتجاه القبلة بدقة</string>
+    <string name="permission_denied">تم رفض إذن الموقع. يرجى تفعيله من الإعدادات.</string>
+    <string name="location_unavailable">تعذر الحصول على الموقع. تأكد من تفعيل GPS.</string>
+    <string name="compass_uncalibrated">البوصلة غير معايره. حرّك الجهاز بشكل رقم 8.</string>
+    <string name="high_accuracy">عالية</string>
+    <string name="medium_accuracy">متوسطة</string>
+    <string name="low_accuracy">منخفضة</string>
+</resources>
