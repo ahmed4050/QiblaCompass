@@ -3,6 +3,7 @@ package com.qibla.compass.ui
 import androidx.compose.animation.animateFloatAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.BorderStroke
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -39,9 +39,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -248,8 +248,9 @@ fun CompassView(viewModel: QiblaViewModel) {
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.size(size)) {
+            val canvasSize = this.size
             drawCompassCircle(
-                size = size.toPx().let { Size(it, it) },
+                size = canvasSize,
                 deviceAzimuth = deviceAzimuth,
                 circleColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 tickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
@@ -277,9 +278,6 @@ fun QiblaArrow(
     arrowColor: Color,
     tipColor: Color
 ) {
-    val arrowSize = size.toPx() * 0.85f
-    val arrowHeight = arrowSize * 0.9f
-
     Box(
         modifier = Modifier
             .size(size)
@@ -289,11 +287,13 @@ fun QiblaArrow(
             }
     ) {
         Canvas(modifier = Modifier.size(size)) {
+            val arrowSize = size.toPx() * 0.85f
+            val arrowHeight = arrowSize * 0.9f
             val centerX = size.toPx() / 2f
             val centerY = size.toPx() / 2f
             val halfWidth = arrowSize / 6f
 
-            val path = android.graphics.Path().apply {
+            val path = Path().apply {
                 moveTo(centerX, centerY - arrowHeight / 2f)
                 lineTo(centerX - halfWidth, centerY + arrowHeight / 4f)
                 lineTo(centerX + halfWidth, centerY + arrowHeight / 4f)
@@ -305,7 +305,7 @@ fun QiblaArrow(
                 color = arrowColor
             )
 
-            val tipPath = android.graphics.Path().apply {
+            val tipPath = Path().apply {
                 moveTo(centerX, centerY - arrowHeight / 2f)
                 lineTo(centerX - halfWidth * 1.5f, centerY - arrowHeight / 2f + halfWidth * 2f)
                 lineTo(centerX + halfWidth * 1.5f, centerY - arrowHeight / 2f + halfWidth * 2f)
@@ -317,17 +317,6 @@ fun QiblaArrow(
                 color = tipColor
             )
         }
-
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.labelLarge.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onPrimary
-            ),
-            modifier = Modifier
-                .padding(top = (size.toPx() * 0.15f).dp)
-                .align(Alignment.CenterHorizontally)
-        )
     }
 }
 
@@ -368,7 +357,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCompassCircle(
 
     // علامات الدرجات (كل 15 درجة)
     for (i in 0..35) {
-        val angle = Math.toRadians((i * 15 - deviceAzimuth + 360) % 360 - 90)
+        val angle = Math.toRadians((i * 15 - deviceAzimuth + 360) % 360 - 90.0)
         val innerRadius = radius - 15f
         val outerRadius = radius
 
@@ -398,7 +387,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCompassCircle(
     )
 
     directions.forEach { (deg, label) ->
-        val angle = Math.toRadians((deg - deviceAzimuth + 360) % 360 - 90)
+        val angle = Math.toRadians((deg - deviceAzimuth + 360) % 360 - 90.0)
         val textRadius = radius - 40f
         val textX = center.x + textRadius * cos(angle).toFloat()
         val textY = center.y + textRadius * sin(angle).toFloat()
@@ -532,12 +521,13 @@ fun LoadingOverlay() {
 @Composable
 fun ErrorSnackbar(viewModel: QiblaViewModel) {
     val snackbarHostState = remember { SnackbarHostState() }
+    val retryText = stringResource(R.string.retry)
 
     LaunchedEffect(viewModel.errorMessage) {
         viewModel.errorMessage?.let { message ->
             snackbarHostState.showSnackbar(
                 message = message,
-                actionLabel = stringResource(R.string.retry),
+                actionLabel = retryText,
                 duration = SnackbarDuration.Indefinite
             ) {
                 viewModel.refreshLocation()
