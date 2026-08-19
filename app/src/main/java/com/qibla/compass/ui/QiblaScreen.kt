@@ -1,7 +1,7 @@
 package com.qibla.compass.ui
 
-import androidx.compose.animation.animateFloatAsState
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -28,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,10 +51,12 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.qibla.compass.R
+import com.qibla.compass.data.AccuracyLevel
 import com.qibla.compass.ui.theme.QiblaCompassTheme
 import com.qibla.compass.ui.theme.QiblaShapes
 import kotlin.math.cos
@@ -243,6 +246,11 @@ fun CompassView(viewModel: QiblaViewModel) {
 
     val textMeasurer = rememberTextMeasurer()
 
+    val circleColor = MaterialTheme.colorScheme.surfaceContainerHighest
+    val tickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    val textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+    val cardinalColor = MaterialTheme.colorScheme.primary
+
     Box(
         modifier = Modifier.size(size),
         contentAlignment = Alignment.Center
@@ -252,10 +260,10 @@ fun CompassView(viewModel: QiblaViewModel) {
             drawCompassCircle(
                 size = canvasSize,
                 deviceAzimuth = deviceAzimuth,
-                circleColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                tickColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                textColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                cardinalColor = MaterialTheme.colorScheme.primary,
+                circleColor = circleColor,
+                tickColor = tickColor,
+                textColor = textColor,
+                cardinalColor = cardinalColor,
                 textMeasurer = textMeasurer
             )
         }
@@ -526,14 +534,14 @@ fun ErrorSnackbar(viewModel: QiblaViewModel) {
 
     LaunchedEffect(viewModel.errorMessage) {
         viewModel.errorMessage?.let { message ->
-            snackbarHostState.showSnackbar(
+            val result = snackbarHostState.showSnackbar(
                 message = message,
                 actionLabel = retryText,
-                duration = SnackbarDuration.Indefinite,
-                actionPerformed = {
-                    viewModel.refreshLocation()
-                }
+                duration = SnackbarDuration.Indefinite
             )
+            if (result == SnackbarResult.ActionPerformed) {
+                viewModel.refreshLocation()
+            }
         }
     }
 

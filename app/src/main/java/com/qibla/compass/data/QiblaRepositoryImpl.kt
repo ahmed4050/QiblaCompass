@@ -12,21 +12,14 @@ import com.qibla.compass.data.QiblaCalculator
 import com.qibla.compass.data.QiblaResult
 import com.qibla.compass.data.QiblaState
 import com.qibla.compass.domain.QiblaRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.receiveAsFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.sharingStarted
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class QiblaRepositoryImpl @Inject constructor(
-    private val context: Context,
-    private val scope: CoroutineScope
+    private val context: Context
 ) : QiblaRepository, SensorEventListener, LocationListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -35,7 +28,7 @@ class QiblaRepositoryImpl @Inject constructor(
     private val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     private val magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
 
-    private val azimuthChannel = Channel<Float>(capacity = 1)
+    private val _azimuthState = MutableStateFlow(0f)
     private val _qiblaState = MutableStateFlow<QiblaState>(QiblaState.Loading)
     private var lastLocation: LocationData? = null
     private var lastAzimuth: Float = 0f
@@ -44,9 +37,8 @@ class QiblaRepositoryImpl @Inject constructor(
     override val qiblaFlow = _qiblaState
         .asStateFlow()
 
-    override val deviceAzimuthFlow = azimuthChannel
-        .receiveAsFlow()
-        .stateIn(scope, sharingStarted.WhileSubscribed(), 0f)
+    override val deviceAzimuthFlow = _azimuthState
+        .asStateFlow()
 
     override suspend fun requestLocationUpdate() {
         if (hasLocationPermission()) {
@@ -125,7 +117,7 @@ class QiblaRepositoryImpl @Inject constructor(
                 val normalizedAzimuth = (azimuth + 360) % 360
 
                 lastAzimuth = normalizedAzimuth
-                scope.launch { azimuthChannel.send(normalizedAzimuth) }
+                _azimuthState.value = normalizedAzimuth
 
                 // تحديث القبلة إذا كان لدينا موقع
                 lastLocation?.let { location ->
@@ -145,7 +137,7 @@ class QiblaRepositoryImpl @Inject constructor(
             longitude = location.longitude,
             accuracy = location.accuracy,
             timestamp = location.time,
-            provider = location.provider
+            provider = location.provider ?: "unknown"
         )
         lastLocation = locationData
 
@@ -179,6 +171,5 @@ class QiblaRepositoryImpl @Inject constructor(
 
     fun shutdown() {
         stopCompassUpdates()
-        azimuthChannel.close()
     }
 }

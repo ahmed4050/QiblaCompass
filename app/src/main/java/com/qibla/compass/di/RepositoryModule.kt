@@ -19,7 +19,6 @@ object RepositoryModule {
     fun provideQiblaRepository(
         @ApplicationContext context: Context
     ): QiblaRepository = QiblaRepositoryImpl(
-        context = context,
-        scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob())
+        context = context
     )
 }
