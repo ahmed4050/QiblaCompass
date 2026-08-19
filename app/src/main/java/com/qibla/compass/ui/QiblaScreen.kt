@@ -287,10 +287,11 @@ fun QiblaArrow(
             }
     ) {
         Canvas(modifier = Modifier.size(size)) {
-            val arrowSize = size.toPx() * 0.85f
+            val canvasSize = this.size
+            val arrowSize = canvasSize.width * 0.85f
             val arrowHeight = arrowSize * 0.9f
-            val centerX = size.toPx() / 2f
-            val centerY = size.toPx() / 2f
+            val centerX = canvasSize.width / 2f
+            val centerY = canvasSize.height / 2f
             val halfWidth = arrowSize / 6f
 
             val path = Path().apply {
@@ -528,10 +529,11 @@ fun ErrorSnackbar(viewModel: QiblaViewModel) {
             snackbarHostState.showSnackbar(
                 message = message,
                 actionLabel = retryText,
-                duration = SnackbarDuration.Indefinite
-            ) {
-                viewModel.refreshLocation()
-            }
+                duration = SnackbarDuration.Indefinite,
+                actionPerformed = {
+                    viewModel.refreshLocation()
+                }
+            )
         }
     }
 
